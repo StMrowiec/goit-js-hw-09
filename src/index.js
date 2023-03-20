@@ -1,5 +1,5 @@
-// import debounce from 'lodash.debounce';
-// import Notiflix from 'notiflix';
+import debounce from 'lodash.debounce';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { fetchCountries } from './fetchCountries.js';
 
 const DEBOUNCE_DELAY = 300;
@@ -7,18 +7,7 @@ const searchInput = document.getElementById('search-box');
 const ul = document.getElementsByClassName('country-list')[0];
 const div = document.getElementsByClassName('country-info')[0];
 
-// Dodać debounce
-searchInput.addEventListener('keyup', async () => {
-  let results = [];
-  let input = searchInput.value.trim();
-  if (input.length) {
-    results = await fetchCountries(input);
-  }
-
-  renderResults(results);
-  console.log(results);
-});
-
+// funkcja która wyrenderuje nam elementy documentu
 function renderResults(results) {
   let content = results
     .map(item => {
@@ -45,13 +34,12 @@ function renderResults(results) {
     })
     .join('');
 
-  // Do zamienienia na powiadomienie notiflix zamiast Console.log
   if (results.length > 10) {
-    console.log('Too many matches found. Please enter a more specific name.');
+    Notify.info('Too many matches found. Please enter a more specific name.');
   }
-  // Do zamienienia na powiadomienie notiflix zamiast Console.log
+
   if (results.length === 0) {
-    console.log('Oops, there is no country with that name');
+    Notify.failure('Oops, there is no country with that name');
   }
 
   if (results.length === 1) {
@@ -62,3 +50,20 @@ function renderResults(results) {
     div.innerHTML = '';
   }
 }
+
+// Funkcja z debouncem
+const debouncedFun = debounce(async function () {
+  let results = [];
+  let input = searchInput.value.trim();
+
+  if (input.length) {
+    results = await fetchCountries(input);
+  }
+
+  renderResults(results);
+}, DEBOUNCE_DELAY);
+
+// Aktywowanie funkcji po naciśnięciu przycisku
+searchInput.addEventListener('keyup', () => {
+  debouncedFun();
+});
